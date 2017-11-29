@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: /well-known-uris/
-Plugin URI: http://wordpress.org/extend/plugins/well-known-uris/
-Description: This plugin enables "Well-Known URIs" support for WordPress (RFC 5785: http://tools.ietf.org/html/rfc5785).
+Plugin Name: /brave-payments-verification/
+Plugin URI: http://wordpress.org/extend/plugins/brave-payments-verification/
+Description: This plugin creates the /.well-known/brave-payments-verification.txt
 Version: 1.0.3
 Author: mrose17
-Author URI: https://github.com/brave/wordpress-well-known
+Author URI: https://github.com/brave-intl/brave-payments-verification/
 */
 
 /**
@@ -45,7 +45,7 @@ class WellKnownUriPlugin {
    *
    * @param WP_Rewrite $wp_rewrite
    */
-  public static function rewrite_rules($wp_rewrite) {
+  public static function rewrite_rules() {
     $well_known_rules = array(
       '.well-known/(.+)' => 'index.php?' . WELL_KNOWN_URI_QUERY_VAR . '=' . $wp_rewrite->preg_index(1),
     );
@@ -70,8 +70,8 @@ class WellKnownUriPlugin {
 }
 
 add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
-add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
-add_action('generate_rewrite_rules', array('WellKnownUriPlugin', 'rewrite_rules'), 99);
+add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'));
+add_action('init', array('WellKnownUriPlugin', 'rewrite_rules'));
 
 register_activation_hook(__FILE__, 'flush_rewrite_rules');
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
@@ -119,7 +119,7 @@ class WellKnownUriSettings {
   }
 
   public function add_plugin_page() {
-    add_options_page('Settings Admin', 'Well-Known URIs', 'manage_options', $this->slug, array($this, 'create_admin_page'));
+    add_options_page('Settings Admin', 'Brave Payments Verification', 'manage_options', $this->slug, array($this, 'create_admin_page'));
   }
 
   public function admin_notices() {
@@ -130,7 +130,7 @@ class WellKnownUriSettings {
     $this->options = get_option(WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <h1>Well-Known URIs</h1>
+      <h1>Brave Payments Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);
@@ -146,12 +146,14 @@ class WellKnownUriSettings {
     $section_prefix = 'well_known_uri';
     $suffix_title = 'Path: /.well-known/';
     $type_title = 'Content-Type:';
-    $contents_title = 'URI contents:';
+    $contents_title = 'Verification Code:';
 
     register_setting($this->option_group, WELL_KNOWN_URI_OPTION_NAME, array($this, 'sanitize_field'));
 
     $options = get_option(WELL_KNOWN_URI_OPTION_NAME);
-    if (!is_array($options)) $j = 1;
+    if (true) {
+      $j = 1;
+    } elseif (!is_array($options)) $j = 1;
     else {
       $newopts = array();
       for ($i = 1, $j = 1;; $i++) {
@@ -173,11 +175,14 @@ class WellKnownUriSettings {
     }
 
     for ($i = 1; $i <= $j; $i++) {
+/*
       add_settings_section($section_prefix . $i, 'URI #' . $i, array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_SUFFIX_PREFIX . $i, $suffix_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_SUFFIX_PREFIX . $i, 'type' => 'text'));
       add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
+ */
+      add_settings_section($section_prefix . $i, '', array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
     }
@@ -219,6 +224,8 @@ class WellKnownUriSettings {
 
   public function sanitize_suffix($input, $id) {
     $valid = array();
+
+    $input[$id] = 'brave-payments-verification.txt';
 
     if (!isset($input[$id])) return $valid;
 
@@ -303,6 +310,7 @@ class WellKnownUriSettings {
     }
 
     if ($validP) $valid[$id] = $result;
+
     return $valid;
   }
 
@@ -311,6 +319,7 @@ class WellKnownUriSettings {
 
     // nothing to sanitize, it's just raw text
     if (isset($input[$id])) $valid[$id] = $input[$id];
+
     return $valid;
   }
 }
