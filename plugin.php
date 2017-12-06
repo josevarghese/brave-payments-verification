@@ -45,7 +45,7 @@ class WellKnownUriPlugin {
    *
    * @param WP_Rewrite $wp_rewrite
    */
-  public static function rewrite_rules() {
+  public static function rewrite_rules($wp_rewrite) {
     $well_known_rules = array(
       '.well-known/(.+)' => 'index.php?' . WELL_KNOWN_URI_QUERY_VAR . '=' . $wp_rewrite->preg_index(1),
     );
@@ -70,8 +70,8 @@ class WellKnownUriPlugin {
 }
 
 add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
-add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'));
-add_action('init', array('WellKnownUriPlugin', 'rewrite_rules'));
+add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
+add_action('init', array('WellKnownUriPlugin', 'rewrite_rules'), 99);
 
 register_activation_hook(__FILE__, 'flush_rewrite_rules');
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
@@ -119,7 +119,7 @@ class WellKnownUriSettings {
   }
 
   public function add_plugin_page() {
-    add_options_page('Settings Admin', 'Brave Payments Verification', 'manage_options', $this->slug, array($this, 'create_admin_page'));
+    add_options_page('Settings Admin', 'Brave Publisher Verification', 'manage_options', $this->slug, array($this, 'create_admin_page'));
   }
 
   public function admin_notices() {
@@ -130,7 +130,7 @@ class WellKnownUriSettings {
     $this->options = get_option(WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <h1>Brave Payments Verification</h1>
+      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Publisher Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);
@@ -182,7 +182,7 @@ class WellKnownUriSettings {
       add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
  */
-      add_settings_section($section_prefix . $i, '', array($this, 'print_section_info'), $this->slug);
+      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and Click Save' , array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
     }
@@ -225,7 +225,12 @@ class WellKnownUriSettings {
   public function sanitize_suffix($input, $id) {
     $valid = array();
 
-    $input[$id] = 'brave-payments-verification.txt';
+    if (empty($input[$id])) {
+      $input[$id] = 'brave-payments-verification.txt';
+      $valid[$id] = $input[$id]
+
+      return $valid;
+    }
 
     if (!isset($input[$id])) return $valid;
 
@@ -246,7 +251,9 @@ class WellKnownUriSettings {
     $validP = TRUE;
 
     if (empty($input[$id])) {
-      $valid[$id] = '';
+      $input[$id] = 'text/plain';
+      $valid[$id] = $input[$id]
+
       return $valid;
     }
 
