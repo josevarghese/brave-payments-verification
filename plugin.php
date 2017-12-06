@@ -227,7 +227,7 @@ class WellKnownUriSettings {
 
     if (empty($input[$id])) {
       $input[$id] = 'brave-payments-verification.txt';
-      $valid[$id] = $input[$id]
+      $valid[$id] = $input[$id];
 
       return $valid;
     }
@@ -252,7 +252,7 @@ class WellKnownUriSettings {
 
     if (empty($input[$id])) {
       $input[$id] = 'text/plain';
-      $valid[$id] = $input[$id]
+      $valid[$id] = $input[$id];
 
       return $valid;
     }
