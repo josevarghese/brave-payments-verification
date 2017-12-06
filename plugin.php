@@ -71,7 +71,7 @@ class WellKnownUriPlugin {
 
 add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
 add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
-add_action('init', array('WellKnownUriPlugin', 'rewrite_rules'), 99);
+add_action('generate_rewrite_rules', array('WellKnownUriPlugin', 'rewrite_rules'), 99);
 
 register_activation_hook(__FILE__, 'flush_rewrite_rules');
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
@@ -146,14 +146,12 @@ class WellKnownUriSettings {
     $section_prefix = 'well_known_uri';
     $suffix_title = 'Path: /.well-known/';
     $type_title = 'Content-Type:';
-    $contents_title = 'Verification Code:';
+    $contents_title = 'Verification code:';
 
     register_setting($this->option_group, WELL_KNOWN_URI_OPTION_NAME, array($this, 'sanitize_field'));
 
     $options = get_option(WELL_KNOWN_URI_OPTION_NAME);
-    if (true) {
-      $j = 1;
-    } elseif (!is_array($options)) $j = 1;
+    if (!is_array($options)) $j = 1;
     else {
       $newopts = array();
       for ($i = 1, $j = 1;; $i++) {
@@ -174,6 +172,7 @@ class WellKnownUriSettings {
       for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_SUFFIX_PREFIX . $j])) break;
     }
 
+    $j = 1;
     for ($i = 1; $i <= $j; $i++) {
 /*
       add_settings_section($section_prefix . $i, 'URI #' . $i, array($this, 'print_section_info'), $this->slug);
@@ -182,7 +181,7 @@ class WellKnownUriSettings {
       add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
  */
-      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and Click Save' , array($this, 'print_section_info'), $this->slug);
+      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and click "Save Changes"' , array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
     }
