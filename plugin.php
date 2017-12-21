@@ -170,9 +170,9 @@ class WellKnownUriSettings {
       update_option(WELL_KNOWN_URI_OPTION_NAME, $newopts);
 
       for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_SUFFIX_PREFIX . $j])) break;
+      $j = 1;
     }
 
-    $j = 1;
     for ($i = 1; $i <= $j; $i++) {
 /*
       add_settings_section($section_prefix . $i, 'URI #' . $i, array($this, 'print_section_info'), $this->slug);
@@ -181,7 +181,8 @@ class WellKnownUriSettings {
       add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
  */
-      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and click "Save Changes"' , array($this, 'print_section_info'), $this->slug);
+      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and click "Save Changes"',
+                           array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
     }
