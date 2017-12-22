@@ -155,8 +155,8 @@ class WellKnownUriSettings {
     else {
       $newopts = array();
       for ($i = 1, $j = 1;; $i++) {
-	if (!isset($options[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) break;
-	if (empty($options[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) continue;
+	if (!isset($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
+	if (empty($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) continue;
 
 /* courtesy of https://stackoverflow.com/questions/619610/whats-the-most-efficient-test-of-whether-a-php-string-ends-with-another-string#2137556 */
         $reversed_needle = strrev('_' . $i);
@@ -169,7 +169,7 @@ class WellKnownUriSettings {
       }
       update_option(WELL_KNOWN_URI_OPTION_NAME, $newopts);
 
-      for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_SUFFIX_PREFIX . $j])) break;
+      for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_CONTENTS_PREFIX . $j])) break;
       $j = 1;
     }
 
@@ -212,7 +212,7 @@ class WellKnownUriSettings {
     $valid = array();
 
     for ($i = 1;; $i++) {
-      if (!isset($input[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) break;
+      if (!isset($input[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
 
       $valid += $this->sanitize_suffix($input, WELL_KNOWN_URI_SUFFIX_PREFIX . $i);
       $valid += $this->sanitize_type($input, WELL_KNOWN_URI_TYPE_PREFIX . $i);
