@@ -3,7 +3,7 @@
 Plugin Name: /brave-payments-verification/
 Plugin URI: http://wordpress.org/extend/plugins/brave-payments-verification/
 Description: This plugin creates the /.well-known/brave-payments-verification.txt
-Version: 1.0.3
+Version: 1.0.4
 Author: mrose17
 Author URI: https://github.com/brave-intl/brave-payments-verification/
 */
@@ -42,15 +42,17 @@ class WellKnownUriPlugin {
 
   /**
    * Add rewrite rules for .well-known.
-   *
-   * @param WP_Rewrite $wp_rewrite
    */
-  public static function rewrite_rules($wp_rewrite) {
-    $well_known_rules = array(
-      '.well-known/(.+)' => 'index.php?' . WELL_KNOWN_URI_QUERY_VAR . '=' . $wp_rewrite->preg_index(1),
-    );
+  public static function add_rewrite_rules() {
+    add_rewrite_rule('^.well-known/(.+)', 'index.php?'.WELL_KNOWN_URI_QUERY_VAR.'=$matches[1]', 'top');
+  }
 
-    $wp_rewrite->rules = $well_known_rules + $wp_rewrite->rules;
+  /**
+   * Called on activate. Add our rewrite rules and flush the WordPress rewrite rules.
+   */
+  public static function activate_plugin() {
+    self::add_rewrite_rules();
+    flush_rewrite_rules();
   }
 
   /**
@@ -71,9 +73,9 @@ class WellKnownUriPlugin {
 
 add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
 add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
-add_action('generate_rewrite_rules', array('WellKnownUriPlugin', 'rewrite_rules'), 99);
+add_action('init', array('WellKnownUriPlugin', 'add_rewrite_rules'));
 
-register_activation_hook(__FILE__, 'flush_rewrite_rules');
+register_activation_hook(__FILE__, array('WellKnownUriPlugin', 'activate_plugin'));
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
 
 function well_known_uri($query) {
@@ -119,7 +121,7 @@ class WellKnownUriSettings {
   }
 
   public function add_plugin_page() {
-    add_options_page('Settings Admin', 'Brave Publisher Verification', 'manage_options', $this->slug, array($this, 'create_admin_page'));
+    add_options_page('Settings Admin', 'Brave Payments Verification', 'manage_options', $this->slug, array($this, 'create_admin_page'));
   }
 
   public function admin_notices() {
@@ -130,7 +132,7 @@ class WellKnownUriSettings {
     $this->options = get_option(WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Publisher Verification</h1>
+      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Payments Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);

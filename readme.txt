@@ -78,6 +78,14 @@ should disable it. This is a good security practice.
 
 == Frequently Asked Questions ==
 
+= It doesn't work =
+
+Please check that your .htaccess file is configured correctly (it should contain "RewriteEngine On").
+On a fresh Wordpress install, you can generate the .htaccess file by going to Settings -> Permalinks,
+choosing a permalink format and clicking Save Changes.
+
+You can also debug rewrite rules with with https://wordpress.org/plugins/rewrite-rules-inspector/
+
 = How can I define a well-known uri? =
 
 Set a callback for an URI (e.g., "/.well-known/robots.txt"),
