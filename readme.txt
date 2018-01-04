@@ -1,7 +1,6 @@
 === brave-payments-verification ===
 Contributors: pfefferle, mrose17
-Donate link: http://www.14101978.de
-Tags: well-known, well-known-uris, discovery
+Tags: well-known, well-known-uris, discovery, brave
 Requires at least: 3.5.1
 Tested up to: 4.9.1
 Stable tag: 1.0.4
