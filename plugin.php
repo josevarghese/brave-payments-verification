@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: /brave-payments-verification/
+Plugin Name: Brave Payments Verification
 Plugin URI: http://wordpress.org/extend/plugins/brave-payments-verification/
-Description: This plugin creates the /.well-known/brave-payments-verification.txt
-Version: 1.0.3
+Description: This plugin creates the /.well-known/brave-payments-verification.txt file
+Version: 1.0.4
 Author: mrose17
 Author URI: https://github.com/brave-intl/brave-payments-verification/
 */
@@ -42,15 +42,17 @@ class WellKnownUriPlugin {
 
   /**
    * Add rewrite rules for .well-known.
-   *
-   * @param WP_Rewrite $wp_rewrite
    */
-  public static function rewrite_rules() {
-    $well_known_rules = array(
-      '.well-known/(.+)' => 'index.php?' . WELL_KNOWN_URI_QUERY_VAR . '=' . $wp_rewrite->preg_index(1),
-    );
+  public static function add_rewrite_rules() {
+    add_rewrite_rule('^.well-known/(.+)', 'index.php?'.WELL_KNOWN_URI_QUERY_VAR.'=$matches[1]', 'top');
+  }
 
-    $wp_rewrite->rules = $well_known_rules + $wp_rewrite->rules;
+  /**
+   * Called on activate. Add our rewrite rules and flush the WordPress rewrite rules.
+   */
+  public static function activate_plugin() {
+    self::add_rewrite_rules();
+    flush_rewrite_rules();
   }
 
   /**
@@ -70,10 +72,10 @@ class WellKnownUriPlugin {
 }
 
 add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
-add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'));
-add_action('init', array('WellKnownUriPlugin', 'rewrite_rules'));
+add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
+add_action('init', array('WellKnownUriPlugin', 'add_rewrite_rules'));
 
-register_activation_hook(__FILE__, 'flush_rewrite_rules');
+register_activation_hook(__FILE__, array('WellKnownUriPlugin', 'activate_plugin'));
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
 
 function well_known_uri($query) {
@@ -130,7 +132,7 @@ class WellKnownUriSettings {
     $this->options = get_option(WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <h1>Brave Payments Verification</h1>
+      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Payments Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);
@@ -146,19 +148,17 @@ class WellKnownUriSettings {
     $section_prefix = 'well_known_uri';
     $suffix_title = 'Path: /.well-known/';
     $type_title = 'Content-Type:';
-    $contents_title = 'Verification Code:';
+    $contents_title = 'Verification code:';
 
     register_setting($this->option_group, WELL_KNOWN_URI_OPTION_NAME, array($this, 'sanitize_field'));
 
     $options = get_option(WELL_KNOWN_URI_OPTION_NAME);
-    if (true) {
-      $j = 1;
-    } elseif (!is_array($options)) $j = 1;
+    if (!is_array($options)) $j = 1;
     else {
       $newopts = array();
       for ($i = 1, $j = 1;; $i++) {
-	if (!isset($options[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) break;
-	if (empty($options[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) continue;
+	if (!isset($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
+	if (empty($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) continue;
 
 /* courtesy of https://stackoverflow.com/questions/619610/whats-the-most-efficient-test-of-whether-a-php-string-ends-with-another-string#2137556 */
         $reversed_needle = strrev('_' . $i);
@@ -171,7 +171,8 @@ class WellKnownUriSettings {
       }
       update_option(WELL_KNOWN_URI_OPTION_NAME, $newopts);
 
-      for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_SUFFIX_PREFIX . $j])) break;
+      for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_CONTENTS_PREFIX . $j])) break;
+      $j = 1;
     }
 
     for ($i = 1; $i <= $j; $i++) {
@@ -182,7 +183,8 @@ class WellKnownUriSettings {
       add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
  */
-      add_settings_section($section_prefix . $i, '', array($this, 'print_section_info'), $this->slug);
+      add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and click "Save Changes"',
+                           array($this, 'print_section_info'), $this->slug);
       add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
 			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
     }
@@ -212,7 +214,7 @@ class WellKnownUriSettings {
     $valid = array();
 
     for ($i = 1;; $i++) {
-      if (!isset($input[WELL_KNOWN_URI_SUFFIX_PREFIX . $i])) break;
+      if (!isset($input[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
 
       $valid += $this->sanitize_suffix($input, WELL_KNOWN_URI_SUFFIX_PREFIX . $i);
       $valid += $this->sanitize_type($input, WELL_KNOWN_URI_TYPE_PREFIX . $i);
@@ -225,7 +227,12 @@ class WellKnownUriSettings {
   public function sanitize_suffix($input, $id) {
     $valid = array();
 
-    $input[$id] = 'brave-payments-verification.txt';
+    if (empty($input[$id])) {
+      $input[$id] = 'brave-payments-verification.txt';
+      $valid[$id] = $input[$id];
+
+      return $valid;
+    }
 
     if (!isset($input[$id])) return $valid;
 
@@ -246,7 +253,9 @@ class WellKnownUriSettings {
     $validP = TRUE;
 
     if (empty($input[$id])) {
-      $valid[$id] = '';
+      $input[$id] = 'text/plain';
+      $valid[$id] = $input[$id];
+
       return $valid;
     }
 
