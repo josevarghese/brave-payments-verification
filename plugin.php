@@ -132,7 +132,7 @@ class BraveWellKnownUriSettings {
     $this->options = get_option(BRAVE_WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Payments Verification</h1>
+      <img src="<?php echo plugins_url( 'brave_icon_shadow_300px.png', __FILE__ ); ?>" height="50px" /><h1>Brave Payments Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);
