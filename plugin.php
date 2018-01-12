@@ -2,9 +2,9 @@
 /*
 Plugin Name: Brave Payments Verification
 Plugin URI: http://wordpress.org/extend/plugins/brave-payments-verification/
-Description: This plugin creates the /.well-known/brave-payments-verification.txt file
+Description: This plugin creates the /.well-known/brave-payments-verification.txt file. See Settings: Brave Payments Verification for details.
 Version: 1.0.4
-Author: mrose17
+Author: Brave Software Intl
 Author URI: https://github.com/brave-intl/brave-payments-verification/
 */
 
@@ -20,14 +20,14 @@ Author URI: https://github.com/brave-intl/brave-payments-verification/
  * http://notizblog.org/
  */
 
-define("WELL_KNOWN_URI_QUERY_VAR",       "well-known");
-define("WELL_KNOWN_URI_OPTION_NAME",     "well_known_option_name");
-define("WELL_KNOWN_URI_SUFFIX_PREFIX",   "suffix_");
-define("WELL_KNOWN_URI_TYPE_PREFIX",     "type_");
-define("WELL_KNOWN_URI_CONTENTS_PREFIX", "contents_");
+define("BRAVE_WELL_KNOWN_URI_QUERY_VAR",       "well-known");
+define("BRAVE_WELL_KNOWN_URI_OPTION_NAME",     "well_known_option_name");
+define("BRAVE_WELL_KNOWN_URI_MATCHER_SUFFIX",   "suffix_");
+define("BRAVE_WELL_KNOWN_URI_MATCHER_TYPE",     "type_");
+define("BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS", "contents_");
 
 
-class WellKnownUriPlugin {
+class BraveWellKnownUriPlugin {
   /**
    * Add 'well-known' as a valid query variables.
    *
@@ -35,7 +35,7 @@ class WellKnownUriPlugin {
    * @return array
    */
   public static function query_vars($vars) {
-    $vars[] = WELL_KNOWN_URI_QUERY_VAR;
+    $vars[] = BRAVE_WELL_KNOWN_URI_QUERY_VAR;
 
     return $vars;
   }
@@ -44,7 +44,7 @@ class WellKnownUriPlugin {
    * Add rewrite rules for .well-known.
    */
   public static function add_rewrite_rules() {
-    add_rewrite_rule('^.well-known/(.+)', 'index.php?'.WELL_KNOWN_URI_QUERY_VAR.'=$matches[1]', 'top');
+    add_rewrite_rule('^.well-known/(.+)', 'index.php?'.BRAVE_WELL_KNOWN_URI_QUERY_VAR.'=$matches[1]', 'top');
   }
 
   /**
@@ -61,8 +61,8 @@ class WellKnownUriPlugin {
    * @param WP $wp
    */
   public static function delegate_request($wp) {
-    if (array_key_exists(WELL_KNOWN_URI_QUERY_VAR, $wp->query_vars)) {
-      $id = $wp->query_vars[WELL_KNOWN_URI_QUERY_VAR];
+    if (array_key_exists(BRAVE_WELL_KNOWN_URI_QUERY_VAR, $wp->query_vars)) {
+      $id = $wp->query_vars[BRAVE_WELL_KNOWN_URI_QUERY_VAR];
 
       // run the more specific hook first
       do_action("well_known_uri_{$id}", $wp->query_vars);
@@ -71,28 +71,28 @@ class WellKnownUriPlugin {
   }
 }
 
-add_filter('query_vars', array('WellKnownUriPlugin', 'query_vars'));
-add_action('parse_request', array('WellKnownUriPlugin', 'delegate_request'), 99);
-add_action('init', array('WellKnownUriPlugin', 'add_rewrite_rules'));
+add_filter('query_vars', array('BraveWellKnownUriPlugin', 'query_vars'));
+add_action('parse_request', array('BraveWellKnownUriPlugin', 'delegate_request'), 99);
+add_action('init', array('BraveWellKnownUriPlugin', 'add_rewrite_rules'));
 
-register_activation_hook(__FILE__, array('WellKnownUriPlugin', 'activate_plugin'));
+register_activation_hook(__FILE__, array('BraveWellKnownUriPlugin', 'activate_plugin'));
 register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
 
 function well_known_uri($query) {
-  $options = get_option(WELL_KNOWN_URI_OPTION_NAME);
+  $options = get_option(BRAVE_WELL_KNOWN_URI_OPTION_NAME);
   if (is_array($options)) {
     foreach($options as $key => $value) {
-      if (strpos($key, WELL_KNOWN_URI_SUFFIX_PREFIX) !== 0) continue;
+      if (strpos($key, BRAVE_WELL_KNOWN_URI_MATCHER_SUFFIX) !== 0) continue;
 
-      $offset = substr($key, strlen(WELL_KNOWN_URI_SUFFIX_PREFIX) - strlen($key));
-      $suffix = $options[WELL_KNOWN_URI_SUFFIX_PREFIX . $offset];
-      if ((empty($suffix)) || (strpos($query[WELL_KNOWN_URI_QUERY_VAR], $suffix) !== 0)) continue;
+      $offset = substr($key, strlen(BRAVE_WELL_KNOWN_URI_MATCHER_SUFFIX) - strlen($key));
+      $suffix = $options[BRAVE_WELL_KNOWN_URI_MATCHER_SUFFIX . $offset];
+      if ((empty($suffix)) || (strpos($query[BRAVE_WELL_KNOWN_URI_QUERY_VAR], $suffix) !== 0)) continue;
 
-      $type = $options[WELL_KNOWN_URI_TYPE_PREFIX . $offset];
+      $type = $options[BRAVE_WELL_KNOWN_URI_MATCHER_TYPE . $offset];
       if (empty($type)) $type = 'text/plain; charset=' . get_option('blog_charset');
       header('Content-Type: ' . $type, TRUE);
 
-      $contents = $options[WELL_KNOWN_URI_CONTENTS_PREFIX . $offset];
+      $contents = $options[BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $offset];
       if (is_string($contents)) echo($contents);
 
       exit;
@@ -109,7 +109,7 @@ add_action('well-known-uri', 'well_known_uri');
 
 
 // (mostly) adapted from Example #2 in https://codex.wordpress.org/Creating_Options_Pages
-class WellKnownUriSettings {
+class BraveWellKnownUriSettings {
   private $options;
   private $slug = 'well-known-admin';
   private $option_group = 'well_known_option_group';
@@ -129,10 +129,10 @@ class WellKnownUriSettings {
   }
 
   public function create_admin_page() {
-    $this->options = get_option(WELL_KNOWN_URI_OPTION_NAME);
+    $this->options = get_option(BRAVE_WELL_KNOWN_URI_OPTION_NAME);
 ?>
     <div class="wrap">
-      <img src="https://brave.com/images/brave_icon_shadow_300px.png" height="50px" /><h1>Brave Payments Verification</h1>
+      <img src="<?php echo plugins_url( 'brave_icon_shadow_300px.png', __FILE__ ); ?>" height="50px" /><h1>Brave Payments Verification</h1>
         <form method="post" action="options.php">
 <?php
     settings_fields($this->option_group);
@@ -150,43 +150,36 @@ class WellKnownUriSettings {
     $type_title = 'Content-Type:';
     $contents_title = 'Verification code:';
 
-    register_setting($this->option_group, WELL_KNOWN_URI_OPTION_NAME, array($this, 'sanitize_field'));
+    register_setting($this->option_group, BRAVE_WELL_KNOWN_URI_OPTION_NAME, array($this, 'sanitize_field'));
 
-    $options = get_option(WELL_KNOWN_URI_OPTION_NAME);
+    $options = get_option(BRAVE_WELL_KNOWN_URI_OPTION_NAME);
     if (!is_array($options)) $j = 1;
     else {
       $newopts = array();
       for ($i = 1, $j = 1;; $i++) {
-	if (!isset($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
-	if (empty($options[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) continue;
+        if (!isset($options[BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i])) break;
+        if (empty($options[BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i])) continue;
 
-/* courtesy of https://stackoverflow.com/questions/619610/whats-the-most-efficient-test-of-whether-a-php-string-ends-with-another-string#2137556 */
+        /* courtesy of https://stackoverflow.com/questions/619610/whats-the-most-efficient-test-of-whether-a-php-string-ends-with-another-string#2137556 */
         $reversed_needle = strrev('_' . $i);
-	foreach($options as $key => $value) {
-	  if (stripos(strrev($key), $reversed_needle) !== 0) continue;
+        foreach($options as $key => $value) {
+          if (stripos(strrev($key), $reversed_needle) !== 0) continue;
 
-	  $newopts[substr($key, 0, 1 + strlen($key) - strlen($reversed_needle)) . $j] = $value;
-	}
+          $newopts[substr($key, 0, 1 + strlen($key) - strlen($reversed_needle)) . $j] = $value;
+        }
         $j++;
       }
-      update_option(WELL_KNOWN_URI_OPTION_NAME, $newopts);
+      update_option(BRAVE_WELL_KNOWN_URI_OPTION_NAME, $newopts);
 
-      for ($j = 1;; $j++) if (!isset($newopts[WELL_KNOWN_URI_CONTENTS_PREFIX . $j])) break;
+      for ($j = 1;; $j++) if (!isset($newopts[BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $j])) break;
       $j = 1;
     }
 
     for ($i = 1; $i <= $j; $i++) {
-/*
-      add_settings_section($section_prefix . $i, 'URI #' . $i, array($this, 'print_section_info'), $this->slug);
-      add_settings_field(WELL_KNOWN_URI_SUFFIX_PREFIX . $i, $suffix_title, array($this, 'field_callback'), $this->slug,
-			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_SUFFIX_PREFIX . $i, 'type' => 'text'));
-      add_settings_field(WELL_KNOWN_URI_TYPE_PREFIX . $i, $type_title, array($this, 'field_callback'), $this->slug,
-			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_TYPE_PREFIX . $i, 'type' => 'text'));
- */
       add_settings_section($section_prefix . $i, 'Enter your Publisher Verification Code Below and click "Save Changes"',
-                           array($this, 'print_section_info'), $this->slug);
-      add_settings_field(WELL_KNOWN_URI_CONTENTS_PREFIX . $i, $contents_title, array($this, 'field_callback'), $this->slug,
-			 $section_prefix . $i, array('id' => WELL_KNOWN_URI_CONTENTS_PREFIX . $i, 'type' => 'textarea'));
+        array($this, 'print_section_info'), $this->slug);
+      add_settings_field(BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i, $contents_title, array($this, 'field_callback'), $this->slug,
+        $section_prefix . $i, array('id' => BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i, 'type' => 'textarea'));
     }
   }
 
@@ -197,13 +190,13 @@ class WellKnownUriSettings {
     $type = $params['type'];
     $value = '';
 
-    $prefix = '<input type="' . $type . '" id="' . $id . '" name="' . WELL_KNOWN_URI_OPTION_NAME . '[' . $id . ']" ';
+    $prefix = '<input type="' . $type . '" id="' . $id . '" name="' . BRAVE_WELL_KNOWN_URI_OPTION_NAME . '[' . $id . ']" ';
     if ($type === 'text') {
       $prefix .= 'size="80" value="';
       if (isset($this->options[$id])) $value = esc_attr($this->options[$id]);
       $suffix =  '" />';
     } elseif ($type === 'textarea') {
-      $prefix = '<textarea id="' . $id . '" name="' . WELL_KNOWN_URI_OPTION_NAME . '[' . $id . ']" rows="4" cols="80">';
+      $prefix = '<textarea id="' . $id . '" name="' . BRAVE_WELL_KNOWN_URI_OPTION_NAME . '[' . $id . ']" rows="4" cols="80">';
       if (isset($this->options[$id])) $value = esc_textarea($this->options[$id]);
       $suffix = '</textarea>';
     }
@@ -214,11 +207,11 @@ class WellKnownUriSettings {
     $valid = array();
 
     for ($i = 1;; $i++) {
-      if (!isset($input[WELL_KNOWN_URI_CONTENTS_PREFIX . $i])) break;
+      if (!isset($input[BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i])) break;
 
-      $valid += $this->sanitize_suffix($input, WELL_KNOWN_URI_SUFFIX_PREFIX . $i);
-      $valid += $this->sanitize_type($input, WELL_KNOWN_URI_TYPE_PREFIX . $i);
-      $valid += $this->sanitize_contents($input, WELL_KNOWN_URI_CONTENTS_PREFIX . $i);
+      $valid += $this->sanitize_suffix($input, BRAVE_WELL_KNOWN_URI_MATCHER_SUFFIX . $i);
+      $valid += $this->sanitize_type($input, BRAVE_WELL_KNOWN_URI_MATCHER_TYPE . $i);
+      $valid += $this->sanitize_contents($input, BRAVE_WELL_KNOWN_URI_MATCHER_CONTENTS . $i);
     }
 
     return $valid;
@@ -246,8 +239,8 @@ class WellKnownUriSettings {
     return $valid;
   }
 
-// a 90% implementation of https://www.w3.org/Protocols/rfc1341/4_Content-Type.html
-//   no self-respecting browser should have problems with a Content-Type header that this considers valid...
+  // a 90% implementation of https://www.w3.org/Protocols/rfc1341/4_Content-Type.html
+  //   no self-respecting browser should have problems with a Content-Type header that this considers valid...
   public function sanitize_type($input, $id) {
     $valid = array();
     $validP = TRUE;
@@ -333,5 +326,5 @@ class WellKnownUriSettings {
   }
 }
 
-if (is_admin()) new WellKnownUriSettings();
+if (is_admin()) new BraveWellKnownUriSettings();
 ?>
