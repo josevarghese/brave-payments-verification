@@ -1,5 +1,5 @@
 === brave-rewards-verification ===
-Contributors: pfefferle, mrose17, corymcdonald
+Contributors: pfefferle, mrose17
 Tags: well-known, well-known-uris, discovery, brave
 Requires at least: 3.5.1
 Tested up to: 4.9.1
